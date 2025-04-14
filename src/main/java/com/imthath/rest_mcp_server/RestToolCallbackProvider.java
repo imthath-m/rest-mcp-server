@@ -4,26 +4,35 @@ import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.method.MethodToolCallback;
 import org.springframework.ai.tool.util.ToolUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.Stream;
 
 @Component
-public class RestToolCallbackProvider implements ToolCallbackProvider {
+public class RestToolCallbackProvider implements ToolCallbackProvider, ApplicationListener<ContextRefreshedEvent> {
 
-    @Autowired
-    private ApplicationContext applicationContext;
+    private Map<String, Object> restBeans;
+
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        // This method is called when the application context is refreshed
+        // You can perform any initialization or setup here if needed
+        restBeans = event.getApplicationContext().getBeansWithAnnotation(RestController.class);
+    }
 
     @Override
     public MethodToolCallback[] getToolCallbacks() {
-        return getRestControllerBeans(applicationContext)
-                .flatMap(this::getToolCallBacksFromRestControllerObject)
-                .toArray(MethodToolCallback[]::new);
+        return restBeans
+            .values()
+            .stream()
+            .flatMap(this::getToolCallBacksFromRestControllerObject)
+            .toArray(MethodToolCallback[]::new);
     }
 
     private MethodToolCallback toolCallback(Method method, Object bean) {
@@ -50,26 +59,6 @@ public class RestToolCallbackProvider implements ToolCallbackProvider {
                 .flatMap(method -> {
                     if (isRequestMethod(method)) {
                         return Stream.of(toolCallback(method, object));
-                    }
-                    return Stream.empty();
-                });
-    }
-
-    private Stream<Object> getRestControllerBeans(ApplicationContext applicationContext) {
-        return Arrays
-                .stream(applicationContext.getBeanDefinitionNames())
-                .flatMap(beanName -> {
-                    // Skip the menuTools bean itself to avoid circular dependency
-                    if ("menuTools".equals(beanName)) {
-                        return Stream.empty();
-                    }
-                    try {
-                        Object bean = applicationContext.getBean(beanName);
-                        if (bean.getClass().isAnnotationPresent(RestController.class)) {
-                            return Stream.of(bean);
-                        }
-                    } catch (Exception e) {
-                        // Skip if there's an error getting the bean
                     }
                     return Stream.empty();
                 });
