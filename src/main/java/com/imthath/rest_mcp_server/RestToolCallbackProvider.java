@@ -4,8 +4,8 @@ import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.method.MethodToolCallback;
 import org.springframework.ai.tool.util.ToolUtils;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,21 +15,17 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @Component
-public class RestToolCallbackProvider implements ToolCallbackProvider, ApplicationListener<ContextRefreshedEvent> {
+public class RestToolCallbackProvider implements ToolCallbackProvider {
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     private Map<String, Object> restBeans;
 
     @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        // This method is called when the application context is refreshed
-        // You can perform any initialization or setup here if needed
-        restBeans = event.getApplicationContext().getBeansWithAnnotation(RestController.class);
-    }
-
-    @Override
     public MethodToolCallback[] getToolCallbacks() {
         if (restBeans == null) {
-            return new MethodToolCallback[0];
+            restBeans = applicationContext.getBeansWithAnnotation(RestController.class);
         }
         return restBeans
             .values()
