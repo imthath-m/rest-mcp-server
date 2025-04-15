@@ -28,6 +28,9 @@ public class RestToolCallbackProvider implements ToolCallbackProvider, Applicati
 
     @Override
     public MethodToolCallback[] getToolCallbacks() {
+        if (restBeans == null) {
+            return new MethodToolCallback[0];
+        }
         return restBeans
             .values()
             .stream()
