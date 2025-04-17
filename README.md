@@ -48,6 +48,11 @@ This step is required because, this package depends on `spring-ai-starter-mcp-se
 
 That's it! Your auto-generated MCP server is now available at `https://localhost:8080/sse`. You can configure this and other features of the MCP server by using variables specified [here](https://docs.spring.io/spring-ai/reference/api/mcp/mcp-server-boot-starter-docs.html#_configuration_properties).
 
+Once you run the app, you should see the following line your console.
+```
+o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: <number of endpoints>, notification: true
+```
+
 FYI, The REST endpoints in your service will continue to be available in the respective paths.
 
 
