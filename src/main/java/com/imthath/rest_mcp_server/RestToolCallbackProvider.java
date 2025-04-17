@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.stream.Stream;
 
 @Component
@@ -20,14 +19,10 @@ public class RestToolCallbackProvider implements ToolCallbackProvider {
     @Autowired
     private ApplicationContext applicationContext;
 
-    private Map<String, Object> restBeans;
-
     @Override
     public MethodToolCallback[] getToolCallbacks() {
-        if (restBeans == null) {
-            restBeans = applicationContext.getBeansWithAnnotation(RestController.class);
-        }
-        return restBeans
+        return applicationContext
+            .getBeansWithAnnotation(RestController.class)
             .values()
             .stream()
             .flatMap(this::getToolCallBacksFromRestControllerObject)
